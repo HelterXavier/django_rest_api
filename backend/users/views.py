@@ -1,3 +1,75 @@
-from django.shortcuts import render
+from rest_framework import status, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import get_user_model
+from .serializers import (UserCreateSerializer, MeSerializer,
+                          ChangePasswordSerializer, CustomTokenObtainPairSerializer)
 
-# Create your views here.
+User = get_user_model()
+
+
+class UserView(APIView):
+    """
+        Unified user account view:
+        - POST    /api/account/        -> create user
+        - GET     /api/account/me/     -> get logged-in user info
+        - PUT     /api/account/me/     -> update user info
+        - PATCH   /api/account/password/ -> change password
+    """
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def post(self, request):
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Account created successfully."}, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        serializer = MeSerializer(request.user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        serializer = MeSerializer(
+            instance=request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class UserPasswordView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password updated successfully."})
+
+
+# LOGOUT
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"error": "'refresh' not sent"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"detail": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+    permission_classes = [permissions.AllowAny]

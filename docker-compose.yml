@@ -4,11 +4,9 @@ services:
     container_name: mergetune_db
     restart: always
     environment:
-      - DJANGO_DB_HOST=mergetune_db
-      - DJANGO_DB_NAME=postgres
-      - DJANGO_DB_USER=postgres
-      - DJANGO_DB_PASSWORD=postgres
-      - DJANGO_DB_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -31,6 +29,8 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: api.settings
+      DJANGO_DB_HOST: db
+      DJANGO_DB_PORT: 5432
     stdin_open: true
     tty: true
 
