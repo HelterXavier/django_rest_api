@@ -1,4 +1,4 @@
-# Mergetune API
+# Dajngo Backend Setup API
 
 API RESTful construída com Django e Django REST Framework para o projeto Mergetune.
 
