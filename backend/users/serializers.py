@@ -4,6 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
 
 User = get_user_model()
 
@@ -19,10 +20,20 @@ class MeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
     username = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
+    photo = serializers.ImageField(required=False, allow_null=True)
+    instruments = serializers.ListField(
+        child=serializers.CharField(), required=False, allow_empty=True)
 
     class Meta:
         model = User
         fields = ['id', 'name', 'username', 'email', 'instruments', 'photo']
+
+    def validate_username(self, value):
+        user = self.context['request'].user
+        if User.objects.exclude(pk=user.pk).filter(username__iexact=value).exists():
+            raise serializers.ValidationError(
+                "This username is already in use.")
+        return value
 
     def validate_email(self, value):
         user = self.context['request'].user
@@ -32,7 +43,7 @@ class MeSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
-    passwor = serializers.CharField(
+    password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
 
@@ -49,7 +60,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
                     "This email is already in use.")
             return email
 
-        def validated_username(self, username):
+        def validate_username(self, username):
             if User.objects.filter(username__iexact=username).exists():
                 raise serializers.ValidationError(
                     "This username is already in use.")
@@ -82,13 +93,3 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context['request'].user
         user.set_password(self.validated_data['new_password'])
         user.save()
-        return {"detail": "Password updated successfully."}
-        return user
-
-
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        # Você pode adicionar claims customizadas ao token aqui, se desejar
-        return token

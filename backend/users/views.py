@@ -1,12 +1,12 @@
+from multiprocessing import context
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth import get_user_model
-from .serializers import (UserCreateSerializer, MeSerializer,
-                          ChangePasswordSerializer, CustomTokenObtainPairSerializer)
+from .serializers import (UserCreateSerializer,
+                          MeSerializer, ChangePasswordSerializer)
 
 User = get_user_model()
 
@@ -37,7 +37,7 @@ class UserView(APIView):
 
     def patch(self, request):
         serializer = MeSerializer(
-            instance=request.user, data=request.data, partial=True)
+            instance=request.user, data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -66,10 +66,5 @@ class LogoutView(APIView):
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response({"detail": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
-        except Exception as e:
+        except TokenError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
-    permission_classes = [permissions.AllowAny]

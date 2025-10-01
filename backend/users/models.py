@@ -3,24 +3,24 @@ from django.contrib.auth.models import AbstractUser, PermissionsMixin, BaseUserM
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, username, name, password=None, **extra_fields):
+    def create_user(self, username, email, name, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
         if not username:
             raise ValueError('The Username field must be set')
 
         email = self.normalize_email(email)
-        user = self.model(email=email, username=username,
+        user = self.model(username=username, email=email,
                           name=name, **extra_fields)
 
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, username, name, password=None, **extra_fields):
+    def create_superuser(self, username, email, name, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, username, name, password, **extra_fields)
+        return self.create_user(username, email, name, password, **extra_fields)
 
 
 class User(AbstractUser, PermissionsMixin):
@@ -33,8 +33,8 @@ class User(AbstractUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'name']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'name']
 
     objects = CustomUserManager()
 
