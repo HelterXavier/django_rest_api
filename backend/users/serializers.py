@@ -1,13 +1,8 @@
-from os import write
-from unittest.mock import Base
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth import authenticate
 
 User = get_user_model()
-
 
 class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,21 +49,26 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
         }
 
-        def validate_email(self, email):
-            if User.objects.filter(email__iexact=email).exists():
-                raise serializers.ValidationError(
-                    "This email is already in use.")
-            return email
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return attrs
 
-        def validate_username(self, username):
-            if User.objects.filter(username__iexact=username).exists():
-                raise serializers.ValidationError(
-                    "This username is already in use.")
-            return username
+    def validate_email(self, email):
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError(
+                "This email is already in use.")
+        return email
 
-        def create(self, validated_data):
-            validated_data.pop('password2')
-            return User.objects.create_user(**validated_data)
+    def validate_username(self, username):
+        if User.objects.filter(username__iexact=username).exists():
+            raise serializers.ValidationError(
+                "This username is already in use.")
+        return username
+
+    def create(self, validated_data):
+        validated_data.pop('password2')
+        return User.objects.create_user(**validated_data)
 
 
 class ChangePasswordSerializer(serializers.Serializer):

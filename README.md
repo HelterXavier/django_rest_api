@@ -90,7 +90,7 @@ Endpoint para verificar se a API está online.
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "email": "seu-email@exemplo.com",
+    "username": "seu-email@exemplo.com",
     "password": "sua-senha"
   }
   ```
@@ -100,6 +100,21 @@ Endpoint para verificar se a API está online.
     "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
+  ```
+
+#### `POST /api/token/verify/`
+
+- **Descrição:** Veirifica se o token atual é valido.
+- **Autenticação:** Nenhuma.
+- **Corpo da Requisição (JSON):**
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU5MzQ0OTMyLCJpYXQiOjE3NTkzNDEzMzIsImp0aSI6IjUwNjg4ZThkODAzMjQ3OTBhNjkxMTBlYjBkNjJlZWRlIiwidXNlcl9pZCI6IjEifQ.-A6ASor9vvUZuhpqkxiAucLgcAc473tzVOchbB6gj-c"
+  }
+  ```
+- **Resposta de Sucesso (200 OK):**
+  ```json
+  {}
   ```
 
 #### `POST /api/token/refresh/`
@@ -138,7 +153,7 @@ Endpoint para verificar se a API está online.
 
 ### Gerenciamento de Usuários
 
-#### `POST /api/`
+#### `POST /api/users/`
 
 - **Descrição:** Cria uma nova conta de usuário.
 - **Autenticação:** Nenhuma.
@@ -159,7 +174,7 @@ Endpoint para verificar se a API está online.
   }
   ```
 
-#### `GET /api/me/`
+#### `GET /api/users/`
 
 - **Descrição:** Retorna as informações do usuário atualmente autenticado.
 - **Autenticação:** Requer token de acesso (`Bearer <token>`).
@@ -175,7 +190,7 @@ Endpoint para verificar se a API está online.
   }
   ```
 
-#### `PATCH /api/me/`
+#### `PATCH /api/users/`
 
 - **Descrição:** Atualiza uma ou mais informações do usuário autenticado.
 - **Autenticação:** Requer token de acesso (`Bearer <token>`).
